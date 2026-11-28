@@ -21,25 +21,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import ru.nto.guestmanagement.mobile.R
 import ru.nto.guestmanagement.mobile.data.TimeProvider
 import ru.nto.guestmanagement.mobile.model.PassData
 import ru.nto.guestmanagement.mobile.model.PassStatus
 import ru.nto.guestmanagement.mobile.ui.PassQr
 import ru.nto.guestmanagement.mobile.ui.TestIds
+import ru.nto.guestmanagement.mobile.ui.statusColor
 
 /** A2. Метка статуса и QR-код (или заглушка «QR-код недоступен»). */
 @Composable
-fun PassAccessPanel(data: PassData, timeProvider: TimeProvider, modifier: Modifier = Modifier) {
-    val  now = timeProvider.now()
+fun PassAccessPanel(
+    data: PassData,
+    timeProvider: TimeProvider,
+    modifier: Modifier = Modifier
+) {
+    val now = timeProvider.now()
     val status = calculatePassStatus(data.pass, data.scans, now)
-    val statusText = when (status) {
-        PassStatus.BLOCKED -> "Заблокирован"
-        PassStatus.NOT_STARTED -> "Ещё не действует"
-        PassStatus.EXPIRED -> "Истёк"
-        PassStatus.EXHAUSTED -> "Лимит проходов исчерпан"
-        PassStatus.ACTIVE -> "Активен"
+
+    val (statusText, colorRes) = when (status) {
+        PassStatus.BLOCKED -> "Заблокирован" to R.color.status_blocked
+        PassStatus.NOT_STARTED -> "Ещё не действует" to R.color.status_not_started
+        PassStatus.EXPIRED -> "Истёк" to R.color.status_expired
+        PassStatus.EXHAUSTED -> "Лимит проходов исчерпан" to R.color.status_exhausted
+        PassStatus.ACTIVE -> "Активен" to R.color.status_active
     }
+
+    val statusColor = colorResource(id = colorRes)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -51,10 +62,16 @@ fun PassAccessPanel(data: PassData, timeProvider: TimeProvider, modifier: Modifi
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier
                 .testTag(TestIds.PASS_STATUS)
+                .statusColor(statusColor)
         )
+
         Spacer(modifier = Modifier.height(16.dp))
+
         if (status == PassStatus.ACTIVE) {
-            PassQr(content = data.pass.qrCode)
+            PassQr(
+                content = data.pass.qrCode,
+                modifier = Modifier.testTag(TestIds.PASS_QR)
+            )
         } else {
             Text(
                 text = "QR-код недоступен",
